@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTechnicalRouteImport } from './routes/_authenticated/technical'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedExecutiveRouteImport } from './routes/_authenticated/executive'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as AuthenticatedTaskTaskIdRouteImport } from './routes/_authenticated/task.$taskId'
@@ -28,6 +29,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedTechnicalRoute = AuthenticatedTechnicalRouteImport.update({
   id: '/technical',
   path: '/technical',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedExecutiveRoute = AuthenticatedExecutiveRouteImport.update({
@@ -50,6 +56,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/executive': typeof AuthenticatedExecutiveRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/technical': typeof AuthenticatedTechnicalRoute
   '/task/$taskId': typeof AuthenticatedTaskTaskIdRoute
 }
@@ -57,6 +64,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/executive': typeof AuthenticatedExecutiveRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/technical': typeof AuthenticatedTechnicalRoute
   '/task/$taskId': typeof AuthenticatedTaskTaskIdRoute
 }
@@ -66,20 +74,34 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/executive': typeof AuthenticatedExecutiveRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/technical': typeof AuthenticatedTechnicalRoute
   '/_authenticated/task/$taskId': typeof AuthenticatedTaskTaskIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/activity' | '/executive' | '/technical' | '/task/$taskId'
+  fullPaths:
+    | '/'
+    | '/activity'
+    | '/executive'
+    | '/settings'
+    | '/technical'
+    | '/task/$taskId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/activity' | '/executive' | '/technical' | '/task/$taskId'
+  to:
+    | '/'
+    | '/activity'
+    | '/executive'
+    | '/settings'
+    | '/technical'
+    | '/task/$taskId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/_authenticated/activity'
     | '/_authenticated/executive'
+    | '/_authenticated/settings'
     | '/_authenticated/technical'
     | '/_authenticated/task/$taskId'
   fileRoutesById: FileRoutesById
@@ -112,6 +134,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTechnicalRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/executive': {
       id: '/_authenticated/executive'
       path: '/executive'
@@ -139,6 +168,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedExecutiveRoute: typeof AuthenticatedExecutiveRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTechnicalRoute: typeof AuthenticatedTechnicalRoute
   AuthenticatedTaskTaskIdRoute: typeof AuthenticatedTaskTaskIdRoute
 }
@@ -146,6 +176,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
   AuthenticatedExecutiveRoute: AuthenticatedExecutiveRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTechnicalRoute: AuthenticatedTechnicalRoute,
   AuthenticatedTaskTaskIdRoute: AuthenticatedTaskTaskIdRoute,
 }
