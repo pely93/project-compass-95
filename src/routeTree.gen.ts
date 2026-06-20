@@ -13,6 +13,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTechnicalRouteImport } from './routes/_authenticated/technical'
 import { Route as AuthenticatedExecutiveRouteImport } from './routes/_authenticated/executive'
+import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as AuthenticatedTaskTaskIdRouteImport } from './routes/_authenticated/task.$taskId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -34,6 +35,11 @@ const AuthenticatedExecutiveRoute = AuthenticatedExecutiveRouteImport.update({
   path: '/executive',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTaskTaskIdRoute = AuthenticatedTaskTaskIdRouteImport.update({
   id: '/task/$taskId',
   path: '/task/$taskId',
@@ -42,12 +48,14 @@ const AuthenticatedTaskTaskIdRoute = AuthenticatedTaskTaskIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/activity': typeof AuthenticatedActivityRoute
   '/executive': typeof AuthenticatedExecutiveRoute
   '/technical': typeof AuthenticatedTechnicalRoute
   '/task/$taskId': typeof AuthenticatedTaskTaskIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/activity': typeof AuthenticatedActivityRoute
   '/executive': typeof AuthenticatedExecutiveRoute
   '/technical': typeof AuthenticatedTechnicalRoute
   '/task/$taskId': typeof AuthenticatedTaskTaskIdRoute
@@ -56,19 +64,21 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/executive': typeof AuthenticatedExecutiveRoute
   '/_authenticated/technical': typeof AuthenticatedTechnicalRoute
   '/_authenticated/task/$taskId': typeof AuthenticatedTaskTaskIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/executive' | '/technical' | '/task/$taskId'
+  fullPaths: '/' | '/activity' | '/executive' | '/technical' | '/task/$taskId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/executive' | '/technical' | '/task/$taskId'
+  to: '/' | '/activity' | '/executive' | '/technical' | '/task/$taskId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/_authenticated/activity'
     | '/_authenticated/executive'
     | '/_authenticated/technical'
     | '/_authenticated/task/$taskId'
@@ -109,6 +119,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedExecutiveRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/activity': {
+      id: '/_authenticated/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof AuthenticatedActivityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/task/$taskId': {
       id: '/_authenticated/task/$taskId'
       path: '/task/$taskId'
@@ -120,12 +137,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedExecutiveRoute: typeof AuthenticatedExecutiveRoute
   AuthenticatedTechnicalRoute: typeof AuthenticatedTechnicalRoute
   AuthenticatedTaskTaskIdRoute: typeof AuthenticatedTaskTaskIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedActivityRoute: AuthenticatedActivityRoute,
   AuthenticatedExecutiveRoute: AuthenticatedExecutiveRoute,
   AuthenticatedTechnicalRoute: AuthenticatedTechnicalRoute,
   AuthenticatedTaskTaskIdRoute: AuthenticatedTaskTaskIdRoute,
