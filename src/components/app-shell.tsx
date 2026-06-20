@@ -15,8 +15,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     queryKey: ["profile", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("name,email").eq("id", user!.id).maybeSingle();
-      return data;
+      const { data } = await supabase.from("profiles").select("name").eq("id", user!.id).maybeSingle();
+      return data ? { ...data, email: user?.email ?? "" } : null;
     },
   });
 

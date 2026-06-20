@@ -19,7 +19,7 @@ export async function fetchTasks(): Promise<Task[]> {
 }
 
 export async function fetchProfiles(): Promise<Profile[]> {
-  const { data, error } = await supabase.from("profiles").select("id,name,email");
+  const { data, error } = await supabase.from("profiles").select("id,name");
   if (error) throw error;
   return (data ?? []) as Profile[];
 }
