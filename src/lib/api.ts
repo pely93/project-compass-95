@@ -60,6 +60,94 @@ export async function fetchHistory(taskId: string): Promise<HistoryEntry[]> {
   return (data ?? []) as HistoryEntry[];
 }
 
+export async function fetchAllHistory(limit = 200): Promise<HistoryEntry[]> {
+  const { data, error } = await supabase
+    .from("task_history")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as HistoryEntry[];
+}
+
+export async function updatePhase(id: string, patch: { name?: string; description?: string | null; order_index?: number }) {
+  const { error } = await supabase.from("phases").update(patch).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deletePhase(id: string) {
+  const { error } = await supabase.from("phases").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export interface BulkTaskNode {
+  title: string;
+  children: BulkTaskNode[];
+}
+
+export function parseMarkdownTasks(md: string): BulkTaskNode[] {
+  const lines = md.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  const roots: BulkTaskNode[] = [];
+  const stack: { node: BulkTaskNode; indent: number }[] = [];
+  for (const raw of lines) {
+    const match = raw.match(/^(\s*)[-*+]\s+(?:\[[ xX]\]\s+)?(.+)$/);
+    if (!match) continue;
+    const indent = match[1].replace(/\t/g, "  ").length;
+    const title = match[2].trim();
+    const node: BulkTaskNode = { title, children: [] };
+    while (stack.length && stack[stack.length - 1].indent >= indent) stack.pop();
+    if (stack.length === 0) roots.push(node);
+    else stack[stack.length - 1].node.children.push(node);
+    stack.push({ node, indent });
+  }
+  return roots;
+}
+
+export async function createTasksFromMarkdown(opts: {
+  md: string;
+  phaseId: string;
+  rootType: TaskType;
+  parentExecutiveId?: string | null;
+  isInternal?: boolean;
+  createdBy: string | null;
+}) {
+  const roots = parseMarkdownTasks(opts.md);
+  if (roots.length === 0) throw new Error("No se han detectado tareas en el Markdown.");
+
+  for (const root of roots) {
+    const { data: created, error } = await supabase
+      .from("tasks")
+      .insert({
+        phase_id: opts.phaseId,
+        type: opts.rootType,
+        title: root.title,
+        parent_executive_id: opts.rootType === "technical" ? opts.parentExecutiveId ?? null : null,
+        is_internal: opts.isInternal ?? false,
+        priority: "media",
+        created_by: opts.createdBy,
+      })
+      .select("id,type")
+      .single();
+    if (error) throw error;
+
+    if (root.children.length) {
+      const childParent = created.type === "executive" ? created.id : opts.parentExecutiveId ?? null;
+      const rows = root.children.map((c) => ({
+        phase_id: opts.phaseId,
+        type: "technical" as const,
+        title: c.title,
+        parent_executive_id: childParent,
+        is_internal: opts.isInternal ?? false,
+        priority: "media" as const,
+        created_by: opts.createdBy,
+      }));
+      const { error: e2 } = await supabase.from("tasks").insert(rows);
+      if (e2) throw e2;
+    }
+  }
+  return roots.length;
+}
+
 export interface TaskUpdate {
   title?: string;
   description?: string | null;

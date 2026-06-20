@@ -1,13 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { fetchPhases, fetchTasks } from "@/lib/api";
+import { fetchPhases, fetchProfiles, fetchTasks } from "@/lib/api";
 import { StatusPill, PriorityBadge, ProgressBar } from "@/components/ui-bits";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Eye, EyeOff, ChevronRight, Loader2 } from "lucide-react";
+import { Plus, Eye, EyeOff, ChevronRight, Loader2, FileCode, X } from "lucide-react";
 import { NewTaskDialog } from "@/components/new-task-dialog";
-import type { Task } from "@/lib/types";
+import { MarkdownImportDialog } from "@/components/markdown-import-dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import type { Task, TaskStatus, TaskPriority } from "@/lib/types";
+import { STATUS_LABEL, PRIORITY_LABEL } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/technical")({
   component: TechnicalDashboard,
@@ -16,24 +21,38 @@ export const Route = createFileRoute("/_authenticated/technical")({
 function TechnicalDashboard() {
   const phasesQ = useQuery({ queryKey: ["phases"], queryFn: fetchPhases });
   const tasksQ = useQuery({ queryKey: ["tasks"], queryFn: fetchTasks });
+  const profilesQ = useQuery({ queryKey: ["profiles"], queryFn: fetchProfiles });
+
   const [openDialog, setOpenDialog] = useState<{ phaseId: string } | null>(null);
+  const [openImport, setOpenImport] = useState(false);
   const [showInternal, setShowInternal] = useState(true);
+  const [fStatus, setFStatus] = useState<TaskStatus | "all">("all");
+  const [fPriority, setFPriority] = useState<TaskPriority | "all">("all");
+  const [fAssignee, setFAssignee] = useState<string>("all");
+  const [fPhase, setFPhase] = useState<string>("all");
+
+  const filtersActive = fStatus !== "all" || fPriority !== "all" || fAssignee !== "all" || fPhase !== "all";
 
   const tasksByPhase = useMemo(() => {
     const map = new Map<string, Task[]>();
     (tasksQ.data ?? []).forEach((t) => {
       if (t.type !== "technical") return;
       if (!showInternal && t.is_internal) return;
+      if (fStatus !== "all" && t.status !== fStatus) return;
+      if (fPriority !== "all" && t.priority !== fPriority) return;
+      if (fAssignee !== "all" && t.assignee_id !== fAssignee) return;
+      if (fPhase !== "all" && t.phase_id !== fPhase) return;
       const arr = map.get(t.phase_id) ?? [];
       arr.push(t);
       map.set(t.phase_id, arr);
     });
     return map;
-  }, [tasksQ.data, showInternal]);
+  }, [tasksQ.data, showInternal, fStatus, fPriority, fAssignee, fPhase]);
 
   const allTechnical = (tasksQ.data ?? []).filter((t) => t.type === "technical");
   const completed = allTechnical.filter((t) => t.status === "completado").length;
   const globalProgress = allTechnical.length ? Math.round((completed / allTechnical.length) * 100) : 0;
+  const visiblePhases = (phasesQ.data ?? []).filter((p) => fPhase === "all" || p.id === fPhase);
 
   if (phasesQ.isLoading || tasksQ.isLoading) {
     return (
@@ -45,7 +64,7 @@ function TechnicalDashboard() {
 
   return (
     <div className="p-8 max-w-7xl">
-      <header className="mb-8">
+      <header className="mb-6">
         <div className="flex items-end justify-between flex-wrap gap-4">
           <div>
             <div className="text-xs uppercase tracking-wider text-primary mb-1">Vista técnica · Alberto</div>
@@ -54,18 +73,65 @@ function TechnicalDashboard() {
               {allTechnical.length} tareas · {completed} completadas · {globalProgress}% global
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setShowInternal((v) => !v)}>
-            {showInternal ? <Eye className="h-4 w-4 mr-2" /> : <EyeOff className="h-4 w-4 mr-2" />}
-            {showInternal ? "Ocultar internas" : "Mostrar internas"}
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setOpenImport(true)}>
+              <FileCode className="h-4 w-4 mr-2" /> Importar Markdown
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowInternal((v) => !v)}>
+              {showInternal ? <Eye className="h-4 w-4 mr-2" /> : <EyeOff className="h-4 w-4 mr-2" />}
+              {showInternal ? "Ocultar internas" : "Mostrar internas"}
+            </Button>
+          </div>
         </div>
         <div className="mt-4 max-w-md">
           <ProgressBar value={globalProgress} />
         </div>
       </header>
 
+      <Card className="p-3 mb-4 flex flex-wrap items-center gap-2">
+        <span className="text-xs text-muted-foreground px-2">Filtros</span>
+        <Select value={fPhase} onValueChange={setFPhase}>
+          <SelectTrigger className="h-8 w-[180px] text-xs"><SelectValue placeholder="Fase" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas las fases</SelectItem>
+            {(phasesQ.data ?? []).map((p) => (
+              <SelectItem key={p.id} value={p.id}>F{p.order_index.toString().padStart(2,"0")} · {p.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={fStatus} onValueChange={(v) => setFStatus(v as TaskStatus | "all")}>
+          <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Cualquier estado</SelectItem>
+            {Object.entries(STATUS_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={fPriority} onValueChange={(v) => setFPriority(v as TaskPriority | "all")}>
+          <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Cualquier prioridad</SelectItem>
+            {Object.entries(PRIORITY_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={fAssignee} onValueChange={setFAssignee}>
+          <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Cualquier responsable</SelectItem>
+            {(profilesQ.data ?? []).map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        {filtersActive && (
+          <Button
+            variant="ghost" size="sm"
+            onClick={() => { setFStatus("all"); setFPriority("all"); setFAssignee("all"); setFPhase("all"); }}
+          >
+            <X className="h-3.5 w-3.5 mr-1" /> Limpiar
+          </Button>
+        )}
+      </Card>
+
       <div className="space-y-4">
-        {(phasesQ.data ?? []).map((phase) => {
+        {visiblePhases.map((phase) => {
           const items = tasksByPhase.get(phase.id) ?? [];
           const done = items.filter((t) => t.status === "completado").length;
           const pct = items.length ? Math.round((done / items.length) * 100) : 0;
@@ -108,7 +174,9 @@ function TechnicalDashboard() {
                   </li>
                 ))}
                 {items.length === 0 && (
-                  <li className="text-xs text-muted-foreground px-3 py-3">Sin tareas técnicas todavía.</li>
+                  <li className="text-xs text-muted-foreground px-3 py-3">
+                    {filtersActive ? "Ninguna tarea coincide con los filtros." : "Sin tareas técnicas todavía."}
+                  </li>
                 )}
               </ul>
 
@@ -130,7 +198,7 @@ function TechnicalDashboard() {
           onClose={() => setOpenDialog(null)}
         />
       )}
+      {openImport && <MarkdownImportDialog onClose={() => setOpenImport(false)} defaultType="technical" />}
     </div>
   );
 }
-
