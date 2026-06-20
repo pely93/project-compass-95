@@ -36,10 +36,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isDev = role === "developer";
   const isPM = role === "project_manager";
 
+  type NavTo = "/technical" | "/executive" | "/activity" | "/settings";
   const navItems = [
-    isDev && { to: "/technical" as const, label: "Panel técnico", icon: Code2 },
-    isPM && { to: "/executive" as const, label: "Panel ejecutivo", icon: LayoutDashboard },
-  ].filter(Boolean) as { to: "/technical" | "/executive"; label: string; icon: typeof Code2 }[];
+    isDev && { to: "/technical" as NavTo, label: "Panel técnico", icon: Code2 },
+    isPM && { to: "/executive" as NavTo, label: "Panel ejecutivo", icon: LayoutDashboard },
+    { to: "/activity" as NavTo, label: "Actividad", icon: History },
+    { to: "/settings" as NavTo, label: "Ajustes", icon: Settings },
+  ].filter(Boolean) as { to: NavTo; label: string; icon: typeof Code2 }[];
 
   return (
     <div className="min-h-screen flex">
