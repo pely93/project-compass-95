@@ -13,7 +13,7 @@ export interface Phase {
 export interface Profile {
   id: string;
   name: string;
-  email: string;
+  email?: string;
 }
 
 export interface Task {
