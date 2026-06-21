@@ -57,6 +57,30 @@ function TaskDetail() {
   const [commentInternal, setCommentInternal] = useState(false);
   const [attName, setAttName] = useState("");
   const [attUrl, setAttUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (files.length === 0) return;
+    setUploading(true);
+    try {
+      for (const f of files) {
+        if (f.size > 20 * 1024 * 1024) {
+          toast.error(`"${f.name}" supera el límite de 20 MB.`);
+          continue;
+        }
+        await uploadAttachmentFile(taskId, f, user?.id ?? null);
+      }
+      qc.invalidateQueries({ queryKey: ["attachments", taskId] });
+      toast.success("Archivo subido");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
 
   if (taskQ.isLoading || !taskQ.data) {
     return (
