@@ -68,7 +68,7 @@ function AuthPage() {
           </div>
           <h1 className="text-3xl font-semibold tracking-tight">Project Tracker</h1>
           <p className="text-sm text-muted-foreground mt-2">
-            Seguimiento del proyecto WordPress · Alberto & Gloria
+            Seguimiento del proyecto WordPress
           </p>
         </div>
 
@@ -125,12 +125,6 @@ function AuthPage() {
             )}
           </div>
         </Card>
-
-        <p className="mt-6 text-xs text-muted-foreground text-center leading-relaxed">
-          Usa <span className="text-foreground font-mono">albertodev@proyecto.com</span> para entrar como Developer
-          o <span className="text-foreground font-mono">gloria.pm@proyecto.com</span> como Project Manager. El rol se asigna
-          automáticamente al registrarte.
-        </p>
       </div>
     </div>
   );
