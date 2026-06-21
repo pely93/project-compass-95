@@ -48,6 +48,7 @@ export interface Attachment {
   name: string;
   url: string;
   kind: string;
+  uploaded_by: string | null;
   created_at: string;
 }
 

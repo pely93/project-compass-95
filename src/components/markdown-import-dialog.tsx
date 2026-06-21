@@ -23,7 +23,7 @@ interface Props {
 
 const SAMPLE = `- Configurar staging en subdominio
   - Crear subdominio en cPanel
-  - Instalar WordPress
+  - Instalar el CMS
   - Activar SSL
 - Reorganizar el menú principal
   - Auditar enlaces actuales

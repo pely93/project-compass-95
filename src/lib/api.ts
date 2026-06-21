@@ -221,6 +221,43 @@ export async function addAttachment(taskId: string, name: string, url: string, u
   if (error) throw error;
 }
 
+export const ATTACHMENT_BUCKET = "task-attachments";
+
+export async function uploadAttachmentFile(taskId: string, file: File, uploadedBy: string | null) {
+  const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+  const path = `${taskId}/${Date.now()}_${safeName}`;
+  const { error: upErr } = await supabase.storage
+    .from(ATTACHMENT_BUCKET)
+    .upload(path, file, { contentType: file.type || undefined, upsert: false });
+  if (upErr) throw upErr;
+  const kind = file.type.startsWith("image/") ? "image" : file.type === "application/pdf" ? "pdf" : "file";
+  const { error } = await supabase.from("attachments").insert({
+    task_id: taskId,
+    name: file.name,
+    url: path,
+    kind,
+    uploaded_by: uploadedBy,
+  });
+  if (error) {
+    await supabase.storage.from(ATTACHMENT_BUCKET).remove([path]);
+    throw error;
+  }
+}
+
+export async function getAttachmentSignedUrl(path: string, expiresIn = 3600): Promise<string> {
+  const { data, error } = await supabase.storage.from(ATTACHMENT_BUCKET).createSignedUrl(path, expiresIn);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+export async function deleteAttachment(id: string, path: string | null, kind: string) {
+  if (kind !== "link" && path) {
+    await supabase.storage.from(ATTACHMENT_BUCKET).remove([path]);
+  }
+  const { error } = await supabase.from("attachments").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function createPhase(name: string, description: string | null, orderIndex: number) {
   const { error } = await supabase.from("phases").insert({ name, description, order_index: orderIndex });
   if (error) throw error;
