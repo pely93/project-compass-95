@@ -125,12 +125,6 @@ function AuthPage() {
             )}
           </div>
         </Card>
-
-        <p className="mt-6 text-xs text-muted-foreground text-center leading-relaxed">
-          Usa <span className="text-foreground font-mono">albertodev@proyecto.com</span> para entrar como Developer
-          o <span className="text-foreground font-mono">gloria.pm@proyecto.com</span> como Project Manager. El rol se asigna
-          automáticamente al registrarte.
-        </p>
       </div>
     </div>
   );
