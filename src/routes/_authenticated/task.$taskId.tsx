@@ -281,33 +281,52 @@ function TaskDetail() {
 
           <Card className="p-5">
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-              <Paperclip className="h-4 w-4" /> Enlaces y adjuntos
+              <Paperclip className="h-4 w-4" /> Adjuntos y enlaces
             </h3>
+            <p className="text-xs text-muted-foreground mb-3">
+              Imágenes, PDF o DOCX para documentar pasos o bloqueos · máx. 20&nbsp;MB.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <label className="inline-flex">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,application/pdf,.doc,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                  className="hidden"
+                />
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border text-sm cursor-pointer hover:bg-accent/40">
+                  {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Paperclip className="h-3.5 w-3.5" />}
+                  Subir archivo
+                </span>
+              </label>
+            </div>
+
             <form onSubmit={handleAddAttachment} className="grid grid-cols-1 md:grid-cols-[1fr_2fr_auto] gap-2 mb-4">
-              <Input placeholder="Nombre" value={attName} onChange={(e) => setAttName(e.target.value)} />
+              <Input placeholder="Nombre del enlace" value={attName} onChange={(e) => setAttName(e.target.value)} />
               <Input placeholder="https://…" value={attUrl} onChange={(e) => setAttUrl(e.target.value)} />
-              <Button type="submit" size="sm" disabled={!attName.trim() || !attUrl.trim()}>Añadir</Button>
+              <Button type="submit" size="sm" variant="outline" disabled={!attName.trim() || !attUrl.trim()}>
+                Añadir enlace
+              </Button>
             </form>
-            <ul className="space-y-1">
+
+            <ul className="space-y-2">
               {(attachQ.data ?? []).map((a) => (
-                <li key={a.id}>
-                  <a
-                    href={a.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2 px-2 py-2 rounded hover:bg-accent/40 text-sm"
-                  >
-                    <LinkIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="truncate">{a.name}</span>
-                    <span className="text-xs text-muted-foreground truncate ml-auto">{a.url}</span>
-                  </a>
-                </li>
+                <AttachmentItem
+                  key={a.id}
+                  attachment={a}
+                  canDelete={isDev || a.uploaded_by === user?.id}
+                  onDeleted={() => qc.invalidateQueries({ queryKey: ["attachments", taskId] })}
+                />
               ))}
               {(attachQ.data ?? []).length === 0 && (
                 <li className="text-xs text-muted-foreground">Sin adjuntos.</li>
               )}
             </ul>
           </Card>
+
 
           {isDev && (
             <Card className="p-5">
