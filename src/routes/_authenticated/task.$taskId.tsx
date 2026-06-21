@@ -11,8 +11,10 @@ import {
   updateTask,
   addComment,
   addAttachment,
+  uploadAttachmentFile,
   deleteTask,
 } from "@/lib/api";
+import { AttachmentItem } from "@/components/attachment-item";
 import { useAuth } from "@/hooks/use-auth";
 import { StatusPill, PriorityBadge } from "@/components/ui-bits";
 import { Button } from "@/components/ui/button";
