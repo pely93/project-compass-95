@@ -13,7 +13,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Acceso — Project Tracker" },
-      { name: "description", content: "Acceso a la plataforma interna de seguimiento del proyecto WordPress." },
+      { name: "description", content: "Acceso a la plataforma interna de seguimiento del proyecto." },
     ],
   }),
   component: AuthPage,
