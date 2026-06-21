@@ -1,21 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { fetchPhases, fetchTasks } from "@/lib/api";
+import { fetchPhases, fetchTasks, fetchProfiles, updateTask } from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
 import { StatusPill, ProgressBar } from "@/components/ui-bits";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, AlertOctagon, Loader2, ChevronRight } from "lucide-react";
-import type { Task } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, AlertOctagon, Loader2, ChevronRight, Mail, PlayCircle, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
+import type { Task, Phase, Profile } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/executive")({
   component: ExecutiveDashboard,
 });
 
 function ExecutiveDashboard() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
   const phasesQ = useQuery({ queryKey: ["phases"], queryFn: fetchPhases });
   const tasksQ = useQuery({ queryKey: ["tasks"], queryFn: fetchTasks });
+  const profilesQ = useQuery({ queryKey: ["profiles"], queryFn: fetchProfiles });
 
-  const { exec, techByExec, globalPct, blocked, doneExec } = useMemo(() => {
+  const { exec, techByExec, globalPct, blocked, blockedTasks, doneExec, phaseById } = useMemo(() => {
     const all = tasksQ.data ?? [];
     const exec = all.filter((t) => t.type === "executive");
     const tech = all.filter((t) => t.type === "technical");
@@ -26,15 +32,46 @@ function ExecutiveDashboard() {
       arr.push(t);
       techByExec.set(t.parent_executive_id, arr);
     });
-    const blocked = tech.filter((t) => t.status === "bloqueado").length;
+    const blockedTasks = all.filter((t) => t.status === "bloqueado");
+    const blocked = blockedTasks.length;
     const doneExec = exec.filter((t) => {
       const ts = techByExec.get(t.id) ?? [];
       if (ts.length === 0) return t.status === "completado";
       return ts.every((x) => x.status === "completado");
     }).length;
     const globalPct = exec.length ? Math.round((doneExec / exec.length) * 100) : 0;
-    return { exec, techByExec, globalPct, blocked, doneExec };
-  }, [tasksQ.data]);
+    const phaseById = new Map<string, Phase>((phasesQ.data ?? []).map((p) => [p.id, p]));
+    return { exec, techByExec, globalPct, blocked, blockedTasks, doneExec, phaseById };
+  }, [tasksQ.data, phasesQ.data]);
+
+  const profileById = useMemo(
+    () => new Map<string, Profile>((profilesQ.data ?? []).map((p) => [p.id, p])),
+    [profilesQ.data],
+  );
+
+  const unblock = async (task: Task) => {
+    try {
+      await updateTask(task.id, { status: "en_curso" }, user?.id ?? null, task);
+      toast.success("Tarea marcada como en curso");
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
+  const notify = (task: Task) => {
+    const assignee = task.assignee_id ? profileById.get(task.assignee_id) : null;
+    if (!assignee?.email) {
+      toast.error("La tarea no tiene responsable con email.");
+      return;
+    }
+    const url = `${window.location.origin}/task/${task.id}`;
+    const subject = encodeURIComponent(`[Bloqueada] ${task.title}`);
+    const body = encodeURIComponent(
+      `Hola ${assignee.name ?? ""},\n\nLa tarea "${task.title}" está marcada como bloqueada.\n¿Puedes revisarla?\n\n${url}\n\nGracias.`,
+    );
+    window.location.href = `mailto:${assignee.email}?subject=${subject}&body=${body}`;
+  };
 
   if (phasesQ.isLoading || tasksQ.isLoading) {
     return (
@@ -43,6 +80,7 @@ function ExecutiveDashboard() {
       </div>
     );
   }
+
 
   return (
     <div className="p-8 max-w-6xl">
