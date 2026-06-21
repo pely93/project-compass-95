@@ -50,11 +50,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="px-5 py-5 border-b border-sidebar-border">
           <div className="flex items-center gap-2">
             <div className="h-7 w-7 rounded-md bg-primary/20 border border-primary/40 flex items-center justify-center">
-              <span className="text-primary text-xs font-bold">WP</span>
+              <span className="text-primary text-xs font-bold">PT</span>
             </div>
             <div>
               <div className="text-sm font-semibold leading-tight">Project Tracker</div>
-              <div className="text-[11px] text-muted-foreground">WordPress migration</div>
+              <div className="text-[11px] text-muted-foreground">Seguimiento interno</div>
             </div>
           </div>
         </div>
