@@ -113,7 +113,50 @@ function ExecutiveDashboard() {
         </Card>
       </div>
 
+      {blockedTasks.length > 0 && (
+        <Card className="p-5 mb-8 border-[color:var(--destructive)]/40 bg-[color:var(--destructive)]/5">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertOctagon className="h-4 w-4 text-[color:var(--destructive)]" />
+            <h2 className="text-sm font-semibold">Alertas · Tareas bloqueadas</h2>
+            <span className="text-xs text-muted-foreground">({blockedTasks.length})</span>
+          </div>
+          <ul className="divide-y divide-border/60">
+            {blockedTasks.map((t) => {
+              const assignee = t.assignee_id ? profileById.get(t.assignee_id) : null;
+              const phase = phaseById.get(t.phase_id);
+              return (
+                <li key={t.id} className="py-3 flex items-center gap-3 flex-wrap">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{t.title}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                      {phase?.name ?? "Sin fase"} · {assignee?.name ?? "Sin responsable"}
+                      {t.due_date ? ` · vence ${t.due_date}` : ""}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="outline" onClick={() => notify(t)} disabled={!assignee?.email}>
+                      <Mail className="h-3.5 w-3.5 mr-1.5" /> Avisar
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => unblock(t)}>
+                      <PlayCircle className="h-3.5 w-3.5 mr-1.5" /> Desbloquear
+                    </Button>
+                    <Link
+                      to="/task/$taskId"
+                      params={{ taskId: t.id }}
+                      className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline px-2"
+                    >
+                      Abrir <ExternalLink className="h-3 w-3" />
+                    </Link>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
         {(phasesQ.data ?? []).map((phase) => {
           const phaseExec = exec.filter((t) => t.phase_id === phase.id);
           const totals = phaseExec.map((t) => {
