@@ -21,13 +21,22 @@ interface Props {
   defaultType?: TaskType;
 }
 
-const SAMPLE = `- Configurar staging en subdominio
-  - Crear subdominio en cPanel
-  - Instalar el CMS
+const SAMPLE = `## Fase: F01 Preparación
+### Ejecutiva
+- Hito: Kickoff
+  - Reunión inicial
+  - Definir alcance
+
+## Fase: F02 Desarrollo
+### Técnica
+- Configurar staging
+  - Crear subdominio
   - Activar SSL
 - Reorganizar el menú principal
-  - Auditar enlaces actuales
-  - Definir nueva jerarquía`;
+
+## Fase: F02 Desarrollo (interna)
+### Técnica
+- Limpiar entorno de pruebas`;
 
 export function MarkdownImportDialog({ onClose, defaultPhaseId, defaultType = "technical" }: Props) {
   const qc = useQueryClient();
