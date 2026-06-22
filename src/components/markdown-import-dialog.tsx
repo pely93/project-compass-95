@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createTasksFromMarkdown, fetchPhases, fetchTasks, parseMarkdownTasks } from "@/lib/api";
+import { createTasksFromMarkdown, fetchPhases, fetchTasks, parseMarkdownDoc } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
