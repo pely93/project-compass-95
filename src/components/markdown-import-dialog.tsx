@@ -58,19 +58,20 @@ export function MarkdownImportDialog({ onClose, defaultPhaseId, defaultType = "t
   const executives = (tasksQ.data ?? []).filter((t) => t.type === "executive" && t.phase_id === phaseId);
 
   const submit = async () => {
-    if (!phaseId) return toast.error("Selecciona una fase");
-    if (preview.length === 0) return toast.error("Pega una lista en Markdown");
+    if (!multiSection && !phaseId) return toast.error("Selecciona una fase o usa encabezados de Fase");
+    if (totalRoots === 0) return toast.error("Pega una lista en Markdown");
     setSubmitting(true);
     try {
       const n = await createTasksFromMarkdown({
         md,
-        phaseId,
+        phaseId: phaseId || (phasesQ.data?.[0]?.id ?? ""),
         rootType,
         parentExecutiveId: rootType === "technical" && parentExec !== "none" ? parentExec : null,
         isInternal,
         createdBy: user?.id ?? null,
+        phases: phasesQ.data ?? [],
       });
-      toast.success(`Creadas ${n} tareas (+ subtareas)`);
+      toast.success(`Creadas ${n} tareas (incluye subtareas)`);
       qc.invalidateQueries({ queryKey: ["tasks"] });
       onClose();
     } catch (err) {
