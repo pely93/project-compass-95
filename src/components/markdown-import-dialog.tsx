@@ -51,7 +51,10 @@ export function MarkdownImportDialog({ onClose, defaultPhaseId, defaultType = "t
   const [isInternal, setIsInternal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const preview = useMemo(() => parseMarkdownTasks(md), [md]);
+  const sections = useMemo(() => parseMarkdownDoc(md), [md]);
+  const totalRoots = sections.reduce((s, sec) => s + sec.roots.length, 0);
+  const totalChildren = sections.reduce((s, sec) => s + sec.roots.reduce((a, n) => a + n.children.length, 0), 0);
+  const multiSection = sections.some((s) => s.phaseHint);
   const executives = (tasksQ.data ?? []).filter((t) => t.type === "executive" && t.phase_id === phaseId);
 
   const submit = async () => {
