@@ -86,7 +86,7 @@ export interface BulkTaskNode {
 }
 
 export function parseMarkdownTasks(md: string): BulkTaskNode[] {
-  const lines = md.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  const lines = md.split(/\r?\n/).filter((l) => l.trim().length > 0 && !/^#{1,6}\s/.test(l));
   const roots: BulkTaskNode[] = [];
   const stack: { node: BulkTaskNode; indent: number }[] = [];
   for (const raw of lines) {
@@ -103,6 +103,75 @@ export function parseMarkdownTasks(md: string): BulkTaskNode[] {
   return roots;
 }
 
+export interface BulkSection {
+  phaseHint?: string;
+  type: TaskType;
+  isInternal: boolean;
+  roots: BulkTaskNode[];
+}
+
+export function parseMarkdownDoc(md: string): BulkSection[] {
+  const lines = md.split(/\r?\n/);
+  const sections: BulkSection[] = [];
+  let current: BulkSection | null = null;
+  let stack: { node: BulkTaskNode; indent: number }[] = [];
+  const ensure = (): BulkSection => {
+    if (!current) {
+      current = { type: "technical", isInternal: false, roots: [] };
+      sections.push(current);
+      stack = [];
+    }
+    return current;
+  };
+  for (const raw of lines) {
+    if (!raw.trim()) continue;
+    const h = raw.match(/^(#{1,6})\s+(.+)$/);
+    if (h) {
+      const text = h[2].trim();
+      const faseM = text.match(/^fase\s*[:\-]?\s*(.+)$/i);
+      const typeM = text.match(/^(t[ée]cnicas?|ejecutivas?|hitos?)$/i);
+      const intM = /interna/i.test(text);
+      if (faseM) {
+        current = { phaseHint: faseM[1].trim(), type: "technical", isInternal: intM, roots: [] };
+        sections.push(current);
+        stack = [];
+      } else if (typeM) {
+        const s = ensure();
+        s.type = /ejecutiva|hito/i.test(typeM[1]) ? "executive" : "technical";
+        if (intM) s.isInternal = true;
+        stack = [];
+      } else if (intM) {
+        ensure().isInternal = true;
+        stack = [];
+      }
+      continue;
+    }
+    const m = raw.match(/^(\s*)[-*+]\s+(?:\[[ xX]\]\s+)?(.+)$/);
+    if (!m) continue;
+    const s = ensure();
+    const indent = m[1].replace(/\t/g, "  ").length;
+    const node: BulkTaskNode = { title: m[2].trim(), children: [] };
+    while (stack.length && stack[stack.length - 1].indent >= indent) stack.pop();
+    if (stack.length === 0) s.roots.push(node);
+    else stack[stack.length - 1].node.children.push(node);
+    stack.push({ node, indent });
+  }
+  return sections.filter((s) => s.roots.length > 0);
+}
+
+function resolvePhaseId(hint: string | undefined, phases: Phase[], fallbackId: string): string {
+  if (!hint) return fallbackId;
+  const norm = hint.toLowerCase().trim();
+  const fMatch = norm.match(/^f?0*(\d+)\b/);
+  if (fMatch) {
+    const idx = Number(fMatch[1]);
+    const byIdx = phases.find((p) => p.order_index === idx);
+    if (byIdx) return byIdx.id;
+  }
+  const byName = phases.find((p) => norm.includes(p.name.toLowerCase()) || p.name.toLowerCase().includes(norm));
+  return byName?.id ?? fallbackId;
+}
+
 export async function createTasksFromMarkdown(opts: {
   md: string;
   phaseId: string;
@@ -110,42 +179,55 @@ export async function createTasksFromMarkdown(opts: {
   parentExecutiveId?: string | null;
   isInternal?: boolean;
   createdBy: string | null;
+  phases?: Phase[];
 }) {
-  const roots = parseMarkdownTasks(opts.md);
-  if (roots.length === 0) throw new Error("No se han detectado tareas en el Markdown.");
+  const sections = parseMarkdownDoc(opts.md);
+  if (sections.length === 0) throw new Error("No se han detectado tareas en el Markdown.");
+  const phases = opts.phases ?? (await fetchPhases());
 
-  for (const root of roots) {
-    const { data: created, error } = await supabase
-      .from("tasks")
-      .insert({
-        phase_id: opts.phaseId,
-        type: opts.rootType,
-        title: root.title,
-        parent_executive_id: opts.rootType === "technical" ? opts.parentExecutiveId ?? null : null,
-        is_internal: opts.isInternal ?? false,
-        priority: "media",
-        created_by: opts.createdBy,
-      })
-      .select("id,type")
-      .single();
-    if (error) throw error;
+  let total = 0;
+  for (const section of sections) {
+    const hasHint = Boolean(section.phaseHint);
+    const phaseId = resolvePhaseId(section.phaseHint, phases, opts.phaseId);
+    const type = hasHint ? section.type : opts.rootType;
+    const isInternal = hasHint ? section.isInternal : (opts.isInternal ?? false);
+    const parentExec = type === "technical" && !hasHint ? opts.parentExecutiveId ?? null : null;
 
-    if (root.children.length) {
-      const childParent = created.type === "executive" ? created.id : opts.parentExecutiveId ?? null;
-      const rows = root.children.map((c) => ({
-        phase_id: opts.phaseId,
-        type: "technical" as const,
-        title: c.title,
-        parent_executive_id: childParent,
-        is_internal: opts.isInternal ?? false,
-        priority: "media" as const,
-        created_by: opts.createdBy,
-      }));
-      const { error: e2 } = await supabase.from("tasks").insert(rows);
-      if (e2) throw e2;
+    for (const root of section.roots) {
+      const { data: created, error } = await supabase
+        .from("tasks")
+        .insert({
+          phase_id: phaseId,
+          type,
+          title: root.title,
+          parent_executive_id: parentExec,
+          is_internal: isInternal,
+          priority: "media",
+          created_by: opts.createdBy,
+        })
+        .select("id,type")
+        .single();
+      if (error) throw error;
+      total += 1;
+
+      if (root.children.length) {
+        const childParent = created.type === "executive" ? created.id : parentExec;
+        const rows = root.children.map((c) => ({
+          phase_id: phaseId,
+          type: "technical" as const,
+          title: c.title,
+          parent_executive_id: childParent,
+          is_internal: isInternal,
+          priority: "media" as const,
+          created_by: opts.createdBy,
+        }));
+        const { error: e2 } = await supabase.from("tasks").insert(rows);
+        if (e2) throw e2;
+        total += rows.length;
+      }
     }
   }
-  return roots.length;
+  return total;
 }
 
 export interface TaskUpdate {
