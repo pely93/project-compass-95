@@ -8,6 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Plus, Eye, EyeOff, ChevronRight, Loader2, FileCode, X } from "lucide-react";
 import { NewTaskDialog } from "@/components/new-task-dialog";
 import { MarkdownImportDialog } from "@/components/markdown-import-dialog";
+import { TimeTracker } from "@/components/time-tracker";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -19,6 +21,7 @@ export const Route = createFileRoute("/_authenticated/technical")({
 });
 
 function TechnicalDashboard() {
+  const { user, role } = useAuth();
   const phasesQ = useQuery({ queryKey: ["phases"], queryFn: fetchPhases });
   const tasksQ = useQuery({ queryKey: ["tasks"], queryFn: fetchTasks });
   const profilesQ = useQuery({ queryKey: ["profiles"], queryFn: fetchProfiles });
@@ -87,6 +90,10 @@ function TechnicalDashboard() {
           <ProgressBar value={globalProgress} />
         </div>
       </header>
+
+      {user && role === "developer" && (
+        <TimeTracker userId={user.id} tasks={allTechnical} />
+      )}
 
       <Card className="p-3 mb-4 flex flex-wrap items-center gap-2">
         <span className="text-xs text-muted-foreground px-2">Filtros</span>
