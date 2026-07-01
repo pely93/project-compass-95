@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { fetchPhases, fetchProfiles, fetchTasks } from "@/lib/api";
-import { StatusPill, PriorityBadge, ProgressBar } from "@/components/ui-bits";
+import { StatusPill, PriorityBadge, ProgressBar, VisibilityBadge } from "@/components/ui-bits";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Plus, Eye, EyeOff, ChevronRight, Loader2, FileCode, X } from "lucide-react";
@@ -151,6 +151,11 @@ function TechnicalDashboard() {
                       F{phase.order_index.toString().padStart(2, "0")}
                     </span>
                     <h2 className="text-base font-semibold">{phase.name}</h2>
+                    {phase.estimated_hours != null && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded border border-border text-muted-foreground">
+                        ~{phase.estimated_hours}h
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">{phase.description}</p>
                 </div>
@@ -170,9 +175,10 @@ function TechnicalDashboard() {
                     >
                       <StatusPill status={t.status} />
                       <span className="flex-1 text-sm truncate">{t.title}</span>
-                      {t.is_internal && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border">
-                          INTERNA
+                      <VisibilityBadge visibility={t.visibility} />
+                      {t.estimated_hours != null && (
+                        <span className="text-[10px] text-muted-foreground tabular-nums">
+                          ~{t.estimated_hours}h
                         </span>
                       )}
                       <PriorityBadge priority={t.priority} />
