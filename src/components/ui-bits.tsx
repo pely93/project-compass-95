@@ -1,4 +1,4 @@
-import { STATUS_LABEL, type TaskStatus, type TaskPriority, PRIORITY_LABEL } from "@/lib/types";
+import { STATUS_LABEL, type TaskStatus, type TaskPriority, PRIORITY_LABEL, type TaskVisibility, VISIBILITY_LABEL } from "@/lib/types";
 import { Flag } from "lucide-react";
 
 export function StatusPill({ status }: { status: TaskStatus }) {
@@ -26,5 +26,19 @@ export function ProgressBar({ value }: { value: number }) {
         style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
       />
     </div>
+  );
+}
+
+export function VisibilityBadge({ visibility }: { visibility: TaskVisibility }) {
+  const cls =
+    visibility === "interna"
+      ? "bg-muted text-muted-foreground border-border"
+      : visibility === "visible_pm"
+      ? "bg-primary/15 text-primary border-primary/30"
+      : "bg-accent/40 text-foreground/80 border-border";
+  return (
+    <span className={`text-[10px] tracking-wide px-1.5 py-0.5 rounded border ${cls}`}>
+      {VISIBILITY_LABEL[visibility]}
+    </span>
   );
 }
