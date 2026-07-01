@@ -20,9 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import type { TaskPriority, TaskType } from "@/lib/types";
+import type { TaskPriority, TaskType, TaskVisibility } from "@/lib/types";
 
 interface Props {
   phaseId: string;
@@ -40,7 +39,8 @@ export function NewTaskDialog({ phaseId, defaultType, onClose }: Props) {
   const [priority, setPriority] = useState<TaskPriority>("media");
   const [type, setType] = useState<TaskType>(defaultType);
   const [parentId, setParentId] = useState<string>("none");
-  const [isInternal, setIsInternal] = useState(false);
+  const [visibility, setVisibility] = useState<TaskVisibility>(defaultType === "executive" ? "visible_pm" : "compartida");
+  const [estimatedHours, setEstimatedHours] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
   const executives = (allTasksQ.data ?? []).filter((t) => t.type === "executive" && t.phase_id === phaseId);
@@ -58,7 +58,8 @@ export function NewTaskDialog({ phaseId, defaultType, onClose }: Props) {
           description: description.trim() || undefined,
           priority,
           parent_executive_id: type === "technical" && parentId !== "none" ? parentId : null,
-          is_internal: isInternal,
+          visibility,
+          estimated_hours: estimatedHours ? Number(estimatedHours) : null,
         },
         user?.id ?? null,
       );
@@ -124,10 +125,29 @@ export function NewTaskDialog({ phaseId, defaultType, onClose }: Props) {
               </Select>
             </div>
           )}
-          <label className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Marcar como interna (no visible para PM)</span>
-            <Switch checked={isInternal} onCheckedChange={setIsInternal} />
-          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Visibilidad</Label>
+              <Select value={visibility} onValueChange={(v) => setVisibility(v as TaskVisibility)}>
+                <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="interna">Interna (solo Alberto)</SelectItem>
+                  <SelectItem value="compartida">Compartida (visible para PM)</SelectItem>
+                  <SelectItem value="visible_pm">Hito PM (impacta progreso)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Horas estimadas</Label>
+              <Input
+                type="number" min="0" step="0.25"
+                value={estimatedHours}
+                onChange={(e) => setEstimatedHours(e.target.value)}
+                className="mt-1.5"
+                placeholder="p. ej. 1.5"
+              />
+            </div>
+          </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
             <Button type="submit" disabled={submitting || !title.trim()}>Crear</Button>

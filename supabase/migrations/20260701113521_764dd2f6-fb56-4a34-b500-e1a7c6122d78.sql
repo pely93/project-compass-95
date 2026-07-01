@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.sync_task_visibility() FROM PUBLIC, anon, authenticated;

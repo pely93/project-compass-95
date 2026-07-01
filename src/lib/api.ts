@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Phase, Task, Comment, Attachment, HistoryEntry, Profile, TaskStatus, TaskPriority, TaskType } from "@/lib/types";
+import type { Phase, Task, Comment, Attachment, HistoryEntry, Profile, TaskStatus, TaskPriority, TaskType, TaskVisibility } from "@/lib/types";
 
 export async function fetchPhases(): Promise<Phase[]> {
   const { data, error } = await supabase.from("phases").select("*").order("order_index");
@@ -237,6 +237,11 @@ export interface TaskUpdate {
   priority?: TaskPriority;
   assignee_id?: string | null;
   due_date?: string | null;
+  actual_date?: string | null;
+  estimated_hours?: number | null;
+  visibility?: TaskVisibility;
+  impacts_pm_progress?: boolean;
+  dependencies?: string | null;
   is_internal?: boolean;
 }
 
@@ -264,8 +269,10 @@ export interface NewTaskInput {
   description?: string;
   priority?: TaskPriority;
   parent_executive_id?: string | null;
-  is_internal?: boolean;
+  visibility?: TaskVisibility;
+  estimated_hours?: number | null;
   due_date?: string | null;
+  is_internal?: boolean;
 }
 
 export async function createTask(input: NewTaskInput, createdBy: string | null) {
