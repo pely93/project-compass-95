@@ -32,7 +32,7 @@ function ExecutiveDashboard() {
       arr.push(t);
       techByExec.set(t.parent_executive_id, arr);
     });
-    const blockedTasks = all.filter((t) => t.status === "bloqueado");
+    const blockedTasks = all.filter((t) => t.status === "bloqueado" && t.visibility !== "interna");
     const blocked = blockedTasks.length;
     const doneExec = exec.filter((t) => {
       const ts = techByExec.get(t.id) ?? [];
@@ -177,6 +177,9 @@ function ExecutiveDashboard() {
                 <div>
                   <div className="text-[11px] font-mono text-muted-foreground">F{phase.order_index.toString().padStart(2, "0")}</div>
                   <h2 className="text-base font-semibold">{phase.name}</h2>
+                  {phase.estimated_hours != null && (
+                    <div className="text-[11px] text-muted-foreground mt-0.5">~{phase.estimated_hours}h estimadas</div>
+                  )}
                 </div>
                 <div className="text-right shrink-0">
                   <div className="text-sm font-medium">{phasePct}%</div>
