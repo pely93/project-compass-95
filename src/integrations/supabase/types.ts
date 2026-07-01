@@ -105,6 +105,7 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          estimated_hours: number | null
           id: string
           name: string
           order_index: number
@@ -112,6 +113,7 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          estimated_hours?: number | null
           id?: string
           name: string
           order_index: number
@@ -119,6 +121,7 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          estimated_hours?: number | null
           id?: string
           name?: string
           order_index?: number
@@ -193,12 +196,16 @@ export type Database = {
       }
       tasks: {
         Row: {
+          actual_date: string | null
           assignee_id: string | null
           created_at: string
           created_by: string | null
+          dependencies: string | null
           description: string | null
           due_date: string | null
+          estimated_hours: number | null
           id: string
+          impacts_pm_progress: boolean
           is_internal: boolean
           parent_executive_id: string | null
           phase_id: string
@@ -208,14 +215,19 @@ export type Database = {
           title: string
           type: Database["public"]["Enums"]["task_type"]
           updated_at: string
+          visibility: string
         }
         Insert: {
+          actual_date?: string | null
           assignee_id?: string | null
           created_at?: string
           created_by?: string | null
+          dependencies?: string | null
           description?: string | null
           due_date?: string | null
+          estimated_hours?: number | null
           id?: string
+          impacts_pm_progress?: boolean
           is_internal?: boolean
           parent_executive_id?: string | null
           phase_id: string
@@ -225,14 +237,19 @@ export type Database = {
           title: string
           type?: Database["public"]["Enums"]["task_type"]
           updated_at?: string
+          visibility?: string
         }
         Update: {
+          actual_date?: string | null
           assignee_id?: string | null
           created_at?: string
           created_by?: string | null
+          dependencies?: string | null
           description?: string | null
           due_date?: string | null
+          estimated_hours?: number | null
           id?: string
+          impacts_pm_progress?: boolean
           is_internal?: boolean
           parent_executive_id?: string | null
           phase_id?: string
@@ -242,6 +259,7 @@ export type Database = {
           title?: string
           type?: Database["public"]["Enums"]["task_type"]
           updated_at?: string
+          visibility?: string
         }
         Relationships: [
           {
