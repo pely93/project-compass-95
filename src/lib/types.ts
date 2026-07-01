@@ -2,12 +2,14 @@ export type AppRole = "developer" | "project_manager";
 export type TaskStatus = "pendiente" | "en_curso" | "bloqueado" | "completado";
 export type TaskPriority = "baja" | "media" | "alta";
 export type TaskType = "technical" | "executive";
+export type TaskVisibility = "interna" | "compartida" | "visible_pm";
 
 export interface Phase {
   id: string;
   order_index: number;
   name: string;
   description: string | null;
+  estimated_hours: number | null;
 }
 
 export interface Profile {
@@ -28,10 +30,21 @@ export interface Task {
   assignee_id: string | null;
   due_date: string | null;
   is_internal: boolean;
+  visibility: TaskVisibility;
+  estimated_hours: number | null;
+  actual_date: string | null;
+  impacts_pm_progress: boolean;
+  dependencies: string | null;
   sort_index: number;
   created_at: string;
   updated_at: string;
 }
+
+export const VISIBILITY_LABEL: Record<TaskVisibility, string> = {
+  interna: "INTERNA",
+  compartida: "COMPARTIDA",
+  visible_pm: "PM",
+};
 
 export interface Comment {
   id: string;
