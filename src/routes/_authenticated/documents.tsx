@@ -15,7 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileText, Upload, Download, Trash2, Loader2, Filter } from "lucide-react";
+import { FileText, Upload, Download, Trash2, Loader2, Filter, Lock, Users } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { fetchProfiles } from "@/lib/api";
 
@@ -37,6 +38,7 @@ interface DocRow {
   mime_type: string | null;
   size_bytes: number | null;
   uploaded_by: string | null;
+  is_shared: boolean;
   created_at: string;
 }
 
@@ -57,6 +59,7 @@ function DocumentsPage() {
   const [filter, setFilter] = useState<Category | "all">("all");
   const [category, setCategory] = useState<Category>("contrato");
   const [description, setDescription] = useState("");
+  const [isShared, setIsShared] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -102,6 +105,7 @@ function DocumentsPage() {
         mime_type: file.type || null,
         size_bytes: file.size,
         uploaded_by: user.id,
+        is_shared: isShared,
       });
       if (error) {
         await supabase.storage.from(BUCKET).remove([path]);
@@ -137,6 +141,20 @@ function DocumentsPage() {
       const { error } = await supabase.from("project_documents").delete().eq("id", d.id);
       if (error) throw error;
       toast.success("Documento eliminado");
+      qc.invalidateQueries({ queryKey: ["project_documents"] });
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
+  const handleToggleShared = async (d: DocRow, next: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("project_documents")
+        .update({ is_shared: next })
+        .eq("id", d.id);
+      if (error) throw error;
+      toast.success(next ? "Documento compartido" : "Documento marcado como privado");
       qc.invalidateQueries({ queryKey: ["project_documents"] });
     } catch (e) {
       toast.error((e as Error).message);
@@ -193,6 +211,20 @@ function DocumentsPage() {
             rows={2}
           />
         </div>
+        <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
+          <div className="text-xs">
+            <div className="font-medium flex items-center gap-1.5">
+              {isShared ? <Users className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+              {isShared ? "Compartido con el equipo" : "Privado (solo tú)"}
+            </div>
+            <div className="text-muted-foreground mt-0.5">
+              {isShared
+                ? "Cualquier usuario autenticado podrá verlo y descargarlo."
+                : "Solo tú puedes verlo y descargarlo."}
+            </div>
+          </div>
+          <Switch checked={isShared} onCheckedChange={setIsShared} disabled={uploading} />
+        </div>
         {uploading && (
           <div className="text-xs text-muted-foreground flex items-center gap-2">
             <Loader2 className="h-3 w-3 animate-spin" /> Subiendo…
@@ -235,6 +267,16 @@ function DocumentsPage() {
                     <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                       {label}
                     </span>
+                    <span
+                      className={`text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded border inline-flex items-center gap-1 ${
+                        d.is_shared
+                          ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                          : "bg-muted text-muted-foreground border-border"
+                      }`}
+                    >
+                      {d.is_shared ? <Users className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+                      {d.is_shared ? "Compartido" : "Privado"}
+                    </span>
                   </div>
                   {d.description && (
                     <div className="text-xs text-muted-foreground mt-0.5">{d.description}</div>
@@ -244,7 +286,15 @@ function DocumentsPage() {
                     {new Date(d.created_at).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" })}
                   </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
+                  {canDelete && (
+                    <div className="flex items-center gap-1.5 mr-1" title="Compartir con el equipo">
+                      <Switch
+                        checked={d.is_shared}
+                        onCheckedChange={(v) => handleToggleShared(d, v)}
+                      />
+                    </div>
+                  )}
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDownload(d)}>
                     <Download className="h-4 w-4" />
                   </Button>
