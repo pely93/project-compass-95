@@ -105,6 +105,7 @@ function DocumentsPage() {
         mime_type: file.type || null,
         size_bytes: file.size,
         uploaded_by: user.id,
+        is_shared: isShared,
       });
       if (error) {
         await supabase.storage.from(BUCKET).remove([path]);
