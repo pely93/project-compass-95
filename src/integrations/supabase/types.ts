@@ -155,6 +155,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_shared: boolean
           mime_type: string | null
           name: string
           size_bytes: number | null
@@ -167,6 +168,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_shared?: boolean
           mime_type?: string | null
           name: string
           size_bytes?: number | null
@@ -179,6 +181,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_shared?: boolean
           mime_type?: string | null
           name?: string
           size_bytes?: number | null
