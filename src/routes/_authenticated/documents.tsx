@@ -197,6 +197,20 @@ function DocumentsPage() {
             rows={2}
           />
         </div>
+        <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
+          <div className="text-xs">
+            <div className="font-medium flex items-center gap-1.5">
+              {isShared ? <Users className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+              {isShared ? "Compartido con el equipo" : "Privado (solo tú)"}
+            </div>
+            <div className="text-muted-foreground mt-0.5">
+              {isShared
+                ? "Cualquier usuario autenticado podrá verlo y descargarlo."
+                : "Solo tú puedes verlo y descargarlo."}
+            </div>
+          </div>
+          <Switch checked={isShared} onCheckedChange={setIsShared} disabled={uploading} />
+        </div>
         {uploading && (
           <div className="text-xs text-muted-foreground flex items-center gap-2">
             <Loader2 className="h-3 w-3 animate-spin" /> Subiendo…
