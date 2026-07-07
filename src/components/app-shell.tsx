@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, Code2, LogOut, Loader2, History, Settings } from "lucide-react";
+import { LayoutDashboard, Code2, LogOut, Loader2, History, Settings, FileText } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
@@ -36,10 +36,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isDev = role === "developer";
   const isPM = role === "project_manager";
 
-  type NavTo = "/technical" | "/executive" | "/activity" | "/settings";
+  type NavTo = "/technical" | "/executive" | "/documents" | "/activity" | "/settings";
   const navItems = [
     isDev && { to: "/technical" as NavTo, label: "Panel técnico", icon: Code2 },
     isPM && { to: "/executive" as NavTo, label: "Panel ejecutivo", icon: LayoutDashboard },
+    { to: "/documents" as NavTo, label: "Documentos", icon: FileText },
     { to: "/activity" as NavTo, label: "Actividad", icon: History },
     { to: "/settings" as NavTo, label: "Ajustes", icon: Settings },
   ].filter(Boolean) as { to: NavTo; label: string; icon: typeof Code2 }[];
