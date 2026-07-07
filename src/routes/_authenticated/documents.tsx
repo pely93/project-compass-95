@@ -267,6 +267,16 @@ function DocumentsPage() {
                     <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                       {label}
                     </span>
+                    <span
+                      className={`text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded border inline-flex items-center gap-1 ${
+                        d.is_shared
+                          ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                          : "bg-muted text-muted-foreground border-border"
+                      }`}
+                    >
+                      {d.is_shared ? <Users className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+                      {d.is_shared ? "Compartido" : "Privado"}
+                    </span>
                   </div>
                   {d.description && (
                     <div className="text-xs text-muted-foreground mt-0.5">{d.description}</div>
@@ -276,7 +286,15 @@ function DocumentsPage() {
                     {new Date(d.created_at).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" })}
                   </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
+                  {canDelete && (
+                    <div className="flex items-center gap-1.5 mr-1" title="Compartir con el equipo">
+                      <Switch
+                        checked={d.is_shared}
+                        onCheckedChange={(v) => handleToggleShared(d, v)}
+                      />
+                    </div>
+                  )}
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDownload(d)}>
                     <Download className="h-4 w-4" />
                   </Button>
