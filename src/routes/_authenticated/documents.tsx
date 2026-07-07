@@ -38,6 +38,7 @@ interface DocRow {
   mime_type: string | null;
   size_bytes: number | null;
   uploaded_by: string | null;
+  is_shared: boolean;
   created_at: string;
 }
 
