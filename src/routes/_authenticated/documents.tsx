@@ -147,6 +147,20 @@ function DocumentsPage() {
     }
   };
 
+  const handleToggleShared = async (d: DocRow, next: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("project_documents")
+        .update({ is_shared: next })
+        .eq("id", d.id);
+      if (error) throw error;
+      toast.success(next ? "Documento compartido" : "Documento marcado como privado");
+      qc.invalidateQueries({ queryKey: ["project_documents"] });
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
   return (
     <div className="p-8 max-w-4xl">
       <header className="mb-6">
