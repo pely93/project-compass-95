@@ -15,7 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileText, Upload, Download, Trash2, Loader2, Filter } from "lucide-react";
+import { FileText, Upload, Download, Trash2, Loader2, Filter, Lock, Users } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { fetchProfiles } from "@/lib/api";
 
