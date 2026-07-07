@@ -59,6 +59,7 @@ function DocumentsPage() {
   const [filter, setFilter] = useState<Category | "all">("all");
   const [category, setCategory] = useState<Category>("contrato");
   const [description, setDescription] = useState("");
+  const [isShared, setIsShared] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
