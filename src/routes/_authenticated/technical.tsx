@@ -221,6 +221,7 @@ function TechnicalDashboard() {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">{phase.description}</p>
+                  </div>
                 </div>
                 <div className="text-right shrink-0">
                   <div className="text-xs text-muted-foreground">{done}/{items.length}</div>
