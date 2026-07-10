@@ -151,7 +151,7 @@ function TaskDetail() {
   const profiles = profilesQ.data ?? [];
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 sm:p-6 md:p-8 max-w-5xl">
       <button
         onClick={() => navigate({ to: isDev ? "/technical" : "/executive" })}
         className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mb-4"

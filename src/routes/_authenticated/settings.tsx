@@ -73,7 +73,7 @@ function SettingsPage() {
   }
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-4 sm:p-6 md:p-8 max-w-3xl">
       <header className="mb-6">
         <div className="text-xs uppercase tracking-wider text-primary mb-1 flex items-center gap-2">
           <SettingsIcon className="h-3.5 w-3.5" /> Ajustes
