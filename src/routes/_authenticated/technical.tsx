@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useMemo, useState } from "react";
-import { fetchPhases, fetchProfiles, fetchTasks } from "@/lib/api";
+import { bulkUpdateVisibility, fetchPhases, fetchProfiles, fetchTasks } from "@/lib/api";
 import { StatusPill, PriorityBadge, ProgressBar, VisibilityBadge } from "@/components/ui-bits";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Eye, EyeOff, ChevronRight, Loader2, FileCode, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Eye, EyeOff, ChevronRight, Loader2, FileCode, X, Lock, Users } from "lucide-react";
 import { NewTaskDialog } from "@/components/new-task-dialog";
 import { MarkdownImportDialog } from "@/components/markdown-import-dialog";
 import { TimeTracker } from "@/components/time-tracker";
@@ -33,6 +35,31 @@ function TechnicalDashboard() {
   const [fPriority, setFPriority] = useState<TaskPriority | "all">("all");
   const [fAssignee, setFAssignee] = useState<string>("all");
   const [fPhase, setFPhase] = useState<string>("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const qc = useQueryClient();
+
+  const toggleSelected = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
+  const applyBulkVisibility = async (v: "interna" | "compartida") => {
+    if (selected.size === 0) return;
+    setBulkBusy(true);
+    try {
+      await bulkUpdateVisibility(Array.from(selected), v);
+      toast.success(`${selected.size} tareas actualizadas`);
+      setSelected(new Set());
+      await qc.invalidateQueries({ queryKey: ["tasks"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error al actualizar");
+    } finally {
+      setBulkBusy(false);
+    }
+  };
 
   const filtersActive = fStatus !== "all" || fPriority !== "all" || fAssignee !== "all" || fPhase !== "all";
 
@@ -137,15 +164,51 @@ function TechnicalDashboard() {
         )}
       </Card>
 
+      {selected.size > 0 && (
+        <div className="sticky top-2 z-20 mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-primary/40 bg-background/95 backdrop-blur p-3 shadow-md">
+          <span className="text-xs font-medium px-1">
+            {selected.size} seleccionada{selected.size === 1 ? "" : "s"}
+          </span>
+          <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => applyBulkVisibility("interna")}>
+            <Lock className="h-3.5 w-3.5 mr-1" /> Marcar como interna
+          </Button>
+          <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => applyBulkVisibility("compartida")}>
+            <Users className="h-3.5 w-3.5 mr-1" /> Marcar como compartida
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
+            <X className="h-3.5 w-3.5 mr-1" /> Limpiar selección
+          </Button>
+        </div>
+      )}
+
       <div className="space-y-4">
         {visiblePhases.map((phase) => {
           const items = tasksByPhase.get(phase.id) ?? [];
+          const allSelected = items.length > 0 && items.every((t) => selected.has(t.id));
+          const someSelected = items.some((t) => selected.has(t.id));
+          const toggleAllInPhase = () => {
+            setSelected((prev) => {
+              const next = new Set(prev);
+              if (allSelected) items.forEach((t) => next.delete(t.id));
+              else items.forEach((t) => next.add(t.id));
+              return next;
+            });
+          };
           const done = items.filter((t) => t.status === "completado").length;
           const pct = items.length ? Math.round((done / items.length) * 100) : 0;
           return (
             <Card key={phase.id} className="p-5 bg-card">
               <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="min-w-0">
+                <div className="min-w-0 flex items-start gap-3">
+                  {items.length > 0 && (
+                    <Checkbox
+                      checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                      onCheckedChange={toggleAllInPhase}
+                      aria-label="Seleccionar todas en fase"
+                      className="mt-1"
+                    />
+                  )}
+                  <div className="min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[11px] font-mono text-muted-foreground">
                       F{phase.order_index.toString().padStart(2, "0")}
@@ -158,6 +221,7 @@ function TechnicalDashboard() {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">{phase.description}</p>
+                  </div>
                 </div>
                 <div className="text-right shrink-0">
                   <div className="text-xs text-muted-foreground">{done}/{items.length}</div>
@@ -167,11 +231,17 @@ function TechnicalDashboard() {
 
               <ul className="space-y-1">
                 {items.map((t) => (
-                  <li key={t.id}>
+                  <li key={t.id} className="flex items-center gap-2">
+                    <Checkbox
+                      checked={selected.has(t.id)}
+                      onCheckedChange={() => toggleSelected(t.id)}
+                      aria-label="Seleccionar tarea"
+                      className="ml-2"
+                    />
                     <Link
                       to="/task/$taskId"
                       params={{ taskId: t.id }}
-                      className="group flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-accent/40 transition-colors"
+                      className="group flex flex-1 items-center gap-3 px-3 py-2.5 rounded-md hover:bg-accent/40 transition-colors min-w-0"
                     >
                       <StatusPill status={t.status} />
                       <span className="flex-1 text-sm truncate">{t.title}</span>
