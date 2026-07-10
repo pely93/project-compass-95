@@ -199,7 +199,16 @@ function TechnicalDashboard() {
           return (
             <Card key={phase.id} className="p-5 bg-card">
               <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="min-w-0">
+                <div className="min-w-0 flex items-start gap-3">
+                  {items.length > 0 && (
+                    <Checkbox
+                      checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                      onCheckedChange={toggleAllInPhase}
+                      aria-label="Seleccionar todas en fase"
+                      className="mt-1"
+                    />
+                  )}
+                  <div className="min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[11px] font-mono text-muted-foreground">
                       F{phase.order_index.toString().padStart(2, "0")}
