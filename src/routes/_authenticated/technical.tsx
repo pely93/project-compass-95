@@ -194,11 +194,17 @@ function TechnicalDashboard() {
 
               <ul className="space-y-1">
                 {items.map((t) => (
-                  <li key={t.id}>
+                  <li key={t.id} className="flex items-center gap-2">
+                    <Checkbox
+                      checked={selected.has(t.id)}
+                      onCheckedChange={() => toggleSelected(t.id)}
+                      aria-label="Seleccionar tarea"
+                      className="ml-2"
+                    />
                     <Link
                       to="/task/$taskId"
                       params={{ taskId: t.id }}
-                      className="group flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-accent/40 transition-colors"
+                      className="group flex flex-1 items-center gap-3 px-3 py-2.5 rounded-md hover:bg-accent/40 transition-colors min-w-0"
                     >
                       <StatusPill status={t.status} />
                       <span className="flex-1 text-sm truncate">{t.title}</span>
