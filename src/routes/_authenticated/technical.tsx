@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { bulkUpdateVisibility, fetchPhases, fetchProfiles, fetchTasks } from "@/lib/api";
 import { StatusPill, PriorityBadge, ProgressBar, VisibilityBadge } from "@/components/ui-bits";
