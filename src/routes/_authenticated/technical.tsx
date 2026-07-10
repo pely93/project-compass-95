@@ -34,6 +34,31 @@ function TechnicalDashboard() {
   const [fPriority, setFPriority] = useState<TaskPriority | "all">("all");
   const [fAssignee, setFAssignee] = useState<string>("all");
   const [fPhase, setFPhase] = useState<string>("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const qc = useQueryClient();
+
+  const toggleSelected = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
+  const applyBulkVisibility = async (v: "interna" | "compartida") => {
+    if (selected.size === 0) return;
+    setBulkBusy(true);
+    try {
+      await bulkUpdateVisibility(Array.from(selected), v);
+      toast.success(`${selected.size} tareas actualizadas`);
+      setSelected(new Set());
+      await qc.invalidateQueries({ queryKey: ["tasks"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error al actualizar");
+    } finally {
+      setBulkBusy(false);
+    }
+  };
 
   const filtersActive = fStatus !== "all" || fPriority !== "all" || fAssignee !== "all" || fPhase !== "all";
 
