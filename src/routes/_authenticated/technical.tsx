@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { fetchPhases, fetchProfiles, fetchTasks } from "@/lib/api";
+import { bulkUpdateVisibility, fetchPhases, fetchProfiles, fetchTasks } from "@/lib/api";
 import { StatusPill, PriorityBadge, ProgressBar, VisibilityBadge } from "@/components/ui-bits";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Eye, EyeOff, ChevronRight, Loader2, FileCode, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Eye, EyeOff, ChevronRight, Loader2, FileCode, X, Lock, Users } from "lucide-react";
 import { NewTaskDialog } from "@/components/new-task-dialog";
 import { MarkdownImportDialog } from "@/components/markdown-import-dialog";
 import { TimeTracker } from "@/components/time-tracker";
