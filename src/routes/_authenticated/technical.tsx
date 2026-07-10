@@ -66,7 +66,7 @@ function TechnicalDashboard() {
   }
 
   return (
-    <div className="p-8 max-w-7xl">
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl">
       <header className="mb-6">
         <div className="flex items-end justify-between flex-wrap gap-4">
           <div>

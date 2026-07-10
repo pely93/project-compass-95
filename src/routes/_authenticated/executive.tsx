@@ -83,7 +83,7 @@ function ExecutiveDashboard() {
 
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-4 sm:p-6 md:p-8 max-w-6xl">
       <header className="mb-8">
         <div className="text-xs uppercase tracking-wider text-primary mb-1">Vista ejecutiva · Gloria</div>
         <h1 className="text-2xl font-semibold tracking-tight">Avance del proyecto</h1>
