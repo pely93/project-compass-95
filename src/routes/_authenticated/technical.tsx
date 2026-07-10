@@ -164,9 +164,36 @@ function TechnicalDashboard() {
         )}
       </Card>
 
+      {selected.size > 0 && (
+        <div className="sticky top-2 z-20 mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-primary/40 bg-background/95 backdrop-blur p-3 shadow-md">
+          <span className="text-xs font-medium px-1">
+            {selected.size} seleccionada{selected.size === 1 ? "" : "s"}
+          </span>
+          <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => applyBulkVisibility("interna")}>
+            <Lock className="h-3.5 w-3.5 mr-1" /> Marcar como interna
+          </Button>
+          <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => applyBulkVisibility("compartida")}>
+            <Users className="h-3.5 w-3.5 mr-1" /> Marcar como compartida
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
+            <X className="h-3.5 w-3.5 mr-1" /> Limpiar selección
+          </Button>
+        </div>
+      )}
+
       <div className="space-y-4">
         {visiblePhases.map((phase) => {
           const items = tasksByPhase.get(phase.id) ?? [];
+          const allSelected = items.length > 0 && items.every((t) => selected.has(t.id));
+          const someSelected = items.some((t) => selected.has(t.id));
+          const toggleAllInPhase = () => {
+            setSelected((prev) => {
+              const next = new Set(prev);
+              if (allSelected) items.forEach((t) => next.delete(t.id));
+              else items.forEach((t) => next.add(t.id));
+              return next;
+            });
+          };
           const done = items.filter((t) => t.status === "completado").length;
           const pct = items.length ? Math.round((done / items.length) * 100) : 0;
           return (
