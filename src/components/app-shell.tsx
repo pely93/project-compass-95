@@ -5,6 +5,7 @@ import { LayoutDashboard, Code2, LogOut, Loader2, History, Settings, FileText, M
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
+import { NotificationsBell } from "@/components/notifications-bell";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, role, loading } = useAuth();
