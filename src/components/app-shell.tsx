@@ -5,6 +5,7 @@ import { LayoutDashboard, Code2, LogOut, Loader2, History, Settings, FileText, M
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
+import { NotificationsBell } from "@/components/notifications-bell";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, role, loading } = useAuth();
@@ -141,12 +142,18 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <div className="h-6 w-6 shrink-0 rounded-md bg-primary/20 border border-primary/40 flex items-center justify-center">
               <span className="text-primary text-[10px] font-bold">PT</span>
             </div>
             <span className="text-sm font-semibold truncate">Project Tracker</span>
           </div>
+          {user?.id && <NotificationsBell userId={user.id} />}
+        </header>
+
+        {/* Desktop topbar */}
+        <header className="hidden md:flex sticky top-0 z-30 items-center justify-end gap-2 px-6 py-2 border-b border-sidebar-border bg-background/95 backdrop-blur">
+          {user?.id && <NotificationsBell userId={user.id} />}
         </header>
 
         <main className="flex-1 min-w-0 overflow-auto">{children}</main>
