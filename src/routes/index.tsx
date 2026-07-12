@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -22,10 +22,8 @@ export const Route = createFileRoute("/")({
 function AuthPage() {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -38,18 +36,8 @@ function AuthPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { name }, emailRedirectTo: window.location.origin },
-        });
-        if (error) throw error;
-        toast.success("Cuenta creada. Iniciando sesión…");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -74,12 +62,6 @@ function AuthPage() {
 
         <Card className="p-6 bg-card/80 backdrop-blur">
           <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === "signup" && (
-              <div className="space-y-2">
-                <Label htmlFor="name">Nombre</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -103,31 +85,15 @@ function AuthPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "signup" ? "Crear cuenta" : "Entrar"}
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
             </Button>
           </form>
 
-          <div className="mt-4 text-center text-sm text-muted-foreground">
-            {mode === "signin" ? (
-              <>
-                ¿Primera vez?{" "}
-                <button onClick={() => setMode("signup")} className="text-primary hover:underline">
-                  Crear cuenta
-                </button>
-              </>
-            ) : (
-              <>
-                ¿Ya tienes cuenta?{" "}
-                <button onClick={() => setMode("signin")} className="text-primary hover:underline">
-                  Inicia sesión
-                </button>
-              </>
-            )}
-          </div>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            El acceso es solo por invitación. Contacta con el administrador para obtener una cuenta.
+          </p>
         </Card>
       </div>
     </div>
   );
 }
-// touch
-// Fri Jun 19 12:12:38 UTC 2026
