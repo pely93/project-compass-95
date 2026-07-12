@@ -1,0 +1,21 @@
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.attachments TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.comments TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.notifications TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.phases TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.project_documents TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.task_history TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.tasks TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.time_entries TO authenticated;
+GRANT SELECT ON public.user_roles TO authenticated;
+
+GRANT ALL ON public.attachments TO service_role;
+GRANT ALL ON public.comments TO service_role;
+GRANT ALL ON public.notifications TO service_role;
+GRANT ALL ON public.phases TO service_role;
+GRANT ALL ON public.profiles TO service_role;
+GRANT ALL ON public.project_documents TO service_role;
+GRANT ALL ON public.task_history TO service_role;
+GRANT ALL ON public.tasks TO service_role;
+GRANT ALL ON public.time_entries TO service_role;
+GRANT ALL ON public.user_roles TO service_role;
