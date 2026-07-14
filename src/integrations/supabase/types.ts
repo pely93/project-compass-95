@@ -101,50 +101,6 @@ export type Database = {
           },
         ]
       }
-      notifications: {
-        Row: {
-          actor_id: string | null
-          body: string | null
-          created_at: string
-          id: string
-          read: boolean
-          task_id: string | null
-          title: string
-          type: string
-          user_id: string
-        }
-        Insert: {
-          actor_id?: string | null
-          body?: string | null
-          created_at?: string
-          id?: string
-          read?: boolean
-          task_id?: string | null
-          title: string
-          type: string
-          user_id: string
-        }
-        Update: {
-          actor_id?: string | null
-          body?: string | null
-          created_at?: string
-          id?: string
-          read?: boolean
-          task_id?: string | null
-          title?: string
-          type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "notifications_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "tasks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       phases: {
         Row: {
           created_at: string
@@ -384,14 +340,9 @@ export type Database = {
           duration_seconds: number | null
           ended_at: string | null
           id: string
-          is_paused: boolean
-          is_submitted: boolean
           note: string | null
-          paused_at: string | null
           started_at: string
-          submitted_at: string | null
           task_id: string | null
-          total_paused_seconds: number
           updated_at: string
           user_id: string
         }
@@ -400,14 +351,9 @@ export type Database = {
           duration_seconds?: number | null
           ended_at?: string | null
           id?: string
-          is_paused?: boolean
-          is_submitted?: boolean
           note?: string | null
-          paused_at?: string | null
           started_at?: string
-          submitted_at?: string | null
           task_id?: string | null
-          total_paused_seconds?: number
           updated_at?: string
           user_id: string
         }
@@ -416,14 +362,9 @@ export type Database = {
           duration_seconds?: number | null
           ended_at?: string | null
           id?: string
-          is_paused?: boolean
-          is_submitted?: boolean
           note?: string | null
-          paused_at?: string | null
           started_at?: string
-          submitted_at?: string | null
           task_id?: string | null
-          total_paused_seconds?: number
           updated_at?: string
           user_id?: string
         }
@@ -463,7 +404,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "developer" | "project_manager"
