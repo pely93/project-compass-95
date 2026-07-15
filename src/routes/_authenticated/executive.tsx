@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { fetchPhases, fetchTasks, fetchProfiles, updateTask } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
-import { StatusPill, PriorityBadge, ProgressBar, VisibilityBadge } from "@/components/ui-bits";
+import { StatusPill, PriorityBadge, ProgressBar } from "@/components/ui-bits";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -249,19 +249,19 @@ function ExecutiveDashboard() {
 
               <ul className="space-y-1">
                 {items.map((t) => (
-                  <li key={t.id}>
-                    <Link
-                      to="/task/$taskId"
-                      params={{ taskId: t.id }}
-                      className="group flex items-center gap-3 px-2 py-2 rounded-md hover:bg-accent/40"
-                    >
-                      <StatusPill status={t.status} />
-                      <span className="flex-1 text-sm truncate">{t.title}</span>
-                      <VisibilityBadge visibility={t.visibility} />
-                      <PriorityBadge priority={t.priority} />
-                      <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100" />
-                    </Link>
-                  </li>
+                 <li key={t.id}>
+  <Link
+    to="/task/$taskId"
+    params={{ taskId: t.id }}
+    className="group flex items-center gap-3 px-2 py-2 rounded-md hover:bg-accent/40"
+  >
+    <StatusPill status={t.status} />
+    <span className="flex-1 text-sm truncate">{t.title}</span>
+    <PriorityBadge priority={t.priority} />
+    <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100" />
+  </Link>
+</li>
+
                 ))}
 
                 {items.length === 0 && (
