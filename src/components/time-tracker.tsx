@@ -1,13 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Play, Square, Trash2, Timer, Pause } from "lucide-react";
+import { Play, Square, Trash2, Timer, Pause, ChevronsUpDown, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { Task } from "@/lib/types";
 
@@ -37,6 +44,7 @@ export function TimeTracker({ userId, tasks }: { userId: string; tasks: Task[] }
 
   const [paused, setPaused] = useState(false);
   const [pausedSeconds, setPausedSeconds] = useState(0);
+  const [taskPickerOpen, setTaskPickerOpen] = useState(false);
 
   const entriesQ = useQuery({
     queryKey: ["time_entries", userId],
@@ -75,6 +83,10 @@ export function TimeTracker({ userId, tasks }: { userId: string; tasks: Task[] }
     tasks.forEach((t) => m.set(t.id, t.title));
     return m;
   }, [tasks]);
+
+  const selectedTaskLabel = taskId === "none"
+    ? "Sin tarea"
+    : (taskMap.get(taskId) ?? "Selecciona una tarea");
 
   async function start() {
     const payload = {
@@ -197,17 +209,64 @@ export function TimeTracker({ userId, tasks }: { userId: string; tasks: Task[] }
           {formatHMS(liveElapsed)}
         </div>
 
-        <Select value={taskId} onValueChange={setTaskId} disabled={!!running}>
-          <SelectTrigger className="h-9 w-[220px] text-xs">
-            <SelectValue placeholder="Tarea (opcional)" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">Sin tarea</SelectItem>
-            {tasks.map((t) => (
-              <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={taskPickerOpen} onOpenChange={setTaskPickerOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={taskPickerOpen}
+              className="h-9 w-[260px] justify-between text-xs font-normal"
+              disabled={!!running}
+            >
+              <span className="truncate text-left">{selectedTaskLabel}</span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[320px] p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Buscar tarea..." className="h-9" />
+              <CommandList>
+                <CommandEmpty>No se encontraron tareas.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    value="Sin tarea"
+                    onSelect={() => {
+                      setTaskId("none");
+                      setTaskPickerOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        taskId === "none" ? "opacity-100" : "opacity-0",
+                      )}
+                    />
+                    Sin tarea
+                  </CommandItem>
+
+                  {tasks.map((t) => (
+                    <CommandItem
+                      key={t.id}
+                      value={t.title}
+                      onSelect={() => {
+                        setTaskId(t.id);
+                        setTaskPickerOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          taskId === t.id ? "opacity-100" : "opacity-0",
+                        )}
+                      />
+                      {t.title}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
 
         <Input
           value={note}
