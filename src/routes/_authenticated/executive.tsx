@@ -3,12 +3,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { fetchPhases, fetchTasks, fetchProfiles, updateTask } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
-import { StatusPill, ProgressBar } from "@/components/ui-bits";
+import { StatusPill, PriorityBadge, ProgressBar, VisibilityBadge } from "@/components/ui-bits";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertOctagon, Loader2, ChevronRight, Mail, PlayCircle, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import type { Task, Phase, Profile } from "@/lib/types";
+import type { Task, Profile } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/executive")({
   component: ExecutiveDashboard,
@@ -21,28 +21,26 @@ function ExecutiveDashboard() {
   const tasksQ = useQuery({ queryKey: ["tasks"], queryFn: fetchTasks });
   const profilesQ = useQuery({ queryKey: ["profiles"], queryFn: fetchProfiles });
 
-  const { exec, techByExec, globalPct, blocked, blockedTasks, doneExec, phaseById } = useMemo(() => {
-    const all = tasksQ.data ?? [];
-    const exec = all.filter((t) => t.type === "executive");
-    const tech = all.filter((t) => t.type === "technical");
-    const techByExec = new Map<string, Task[]>();
-    tech.forEach((t) => {
-      if (!t.parent_executive_id) return;
-      const arr = techByExec.get(t.parent_executive_id) ?? [];
+  // Same checklist the developer sees on /technical, minus anything marked
+  // "interna". RLS already excludes internal rows for a PM session; this
+  // filter also makes a developer's own preview of this screen match what
+  // the PM actually sees.
+  const { byPhase, totalCount, doneCount, globalPct, blockedTasks } = useMemo(() => {
+    const visibleTasks = (tasksQ.data ?? []).filter(
+      (t) => t.type === "technical" && t.visibility !== "interna",
+    );
+    const byPhase = new Map<string, Task[]>();
+    visibleTasks.forEach((t) => {
+      const arr = byPhase.get(t.phase_id) ?? [];
       arr.push(t);
-      techByExec.set(t.parent_executive_id, arr);
+      byPhase.set(t.phase_id, arr);
     });
-    const blockedTasks = all.filter((t) => t.status === "bloqueado" && t.visibility !== "interna");
-    const blocked = blockedTasks.length;
-    const doneExec = exec.filter((t) => {
-      const ts = techByExec.get(t.id) ?? [];
-      if (ts.length === 0) return t.status === "completado";
-      return ts.every((x) => x.status === "completado");
-    }).length;
-    const globalPct = exec.length ? Math.round((doneExec / exec.length) * 100) : 0;
-    const phaseById = new Map<string, Phase>((phasesQ.data ?? []).map((p) => [p.id, p]));
-    return { exec, techByExec, globalPct, blocked, blockedTasks, doneExec, phaseById };
-  }, [tasksQ.data, phasesQ.data]);
+    const totalCount = visibleTasks.length;
+    const doneCount = visibleTasks.filter((t) => t.status === "completado").length;
+    const globalPct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
+    const blockedTasks = visibleTasks.filter((t) => t.status === "bloqueado");
+    return { byPhase, totalCount, doneCount, globalPct, blockedTasks };
+  }, [tasksQ.data]);
 
   const profileById = useMemo(
     () => new Map<string, Profile>((profilesQ.data ?? []).map((p) => [p.id, p])),
@@ -81,13 +79,14 @@ function ExecutiveDashboard() {
     );
   }
 
-
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-6xl">
       <header className="mb-8">
         <div className="text-xs uppercase tracking-wider text-primary mb-1">Vista ejecutiva · Gloria</div>
         <h1 className="text-2xl font-semibold tracking-tight">Avance del proyecto</h1>
-        <p className="text-sm text-muted-foreground mt-1">Resumen del estado por fases e hitos clave.</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Mismo checklist que el panel técnico, sin las tareas marcadas como internas.
+        </p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -95,21 +94,21 @@ function ExecutiveDashboard() {
           <div className="text-xs text-muted-foreground">Progreso global</div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-3xl font-semibold">{globalPct}%</span>
-            <span className="text-xs text-muted-foreground">{doneExec}/{exec.length} hitos</span>
+            <span className="text-xs text-muted-foreground">{doneCount}/{totalCount} tareas</span>
           </div>
           <div className="mt-3"><ProgressBar value={globalPct} /></div>
         </Card>
         <Card className="p-5">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <CheckCircle2 className="h-3.5 w-3.5 text-[color:var(--success)]" /> Hitos completados
+            <CheckCircle2 className="h-3.5 w-3.5 text-[color:var(--success)]" /> Tareas completadas
           </div>
-          <div className="mt-2 text-3xl font-semibold">{doneExec}</div>
+          <div className="mt-2 text-3xl font-semibold">{doneCount}</div>
         </Card>
         <Card className="p-5">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <AlertOctagon className="h-3.5 w-3.5 text-[color:var(--destructive)]" /> Tareas bloqueadas
           </div>
-          <div className="mt-2 text-3xl font-semibold">{blocked}</div>
+          <div className="mt-2 text-3xl font-semibold">{blockedTasks.length}</div>
         </Card>
       </div>
 
@@ -123,7 +122,7 @@ function ExecutiveDashboard() {
           <ul className="divide-y divide-border/60">
             {blockedTasks.map((t) => {
               const assignee = t.assignee_id ? profileById.get(t.assignee_id) : null;
-              const phase = phaseById.get(t.phase_id);
+              const phase = (phasesQ.data ?? []).find((p) => p.id === t.phase_id);
               return (
                 <li key={t.id} className="py-3 flex items-center gap-3 flex-wrap">
                   <div className="flex-1 min-w-0">
@@ -155,57 +154,47 @@ function ExecutiveDashboard() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
+      <div className="space-y-4">
         {(phasesQ.data ?? []).map((phase) => {
-          const phaseExec = exec.filter((t) => t.phase_id === phase.id);
-          const totals = phaseExec.map((t) => {
-            const ts = techByExec.get(t.id) ?? [];
-            const done = ts.filter((x) => x.status === "completado").length;
-            const pct = ts.length ? Math.round((done / ts.length) * 100) : t.status === "completado" ? 100 : 0;
-            const status = ts.length === 0 ? t.status :
-              ts.some((x) => x.status === "bloqueado") ? "bloqueado" :
-              ts.every((x) => x.status === "completado") ? "completado" :
-              ts.some((x) => x.status === "en_curso" || x.status === "completado") ? "en_curso" : "pendiente";
-            return { task: t, pct, status, done, total: ts.length };
-          });
-          const phasePct = totals.length ? Math.round(totals.reduce((s, x) => s + x.pct, 0) / totals.length) : 0;
-
+          const items = byPhase.get(phase.id) ?? [];
+          const done = items.filter((t) => t.status === "completado").length;
+          const pct = items.length ? Math.round((done / items.length) * 100) : 0;
           return (
             <Card key={phase.id} className="p-5">
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div>
-                  <div className="text-[11px] font-mono text-muted-foreground">F{phase.order_index.toString().padStart(2, "0")}</div>
+                  <div className="text-[11px] font-mono text-muted-foreground">
+                    F{phase.order_index.toString().padStart(2, "0")}
+                  </div>
                   <h2 className="text-base font-semibold">{phase.name}</h2>
                   {phase.estimated_hours != null && (
                     <div className="text-[11px] text-muted-foreground mt-0.5">~{phase.estimated_hours}h estimadas</div>
                   )}
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="text-sm font-medium">{phasePct}%</div>
-                  <div className="w-20 mt-1"><ProgressBar value={phasePct} /></div>
+                  <div className="text-sm font-medium">{done}/{items.length}</div>
+                  <div className="w-20 mt-1"><ProgressBar value={pct} /></div>
                 </div>
               </div>
 
               <ul className="space-y-1">
-                {totals.map((row) => (
-                  <li key={row.task.id}>
+                {items.map((t) => (
+                  <li key={t.id}>
                     <Link
                       to="/task/$taskId"
-                      params={{ taskId: row.task.id }}
+                      params={{ taskId: t.id }}
                       className="group flex items-center gap-3 px-2 py-2 rounded-md hover:bg-accent/40"
                     >
-                      <StatusPill status={row.status as Task["status"]} />
-                      <span className="flex-1 text-sm truncate">{row.task.title}</span>
-                      <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {row.total > 0 ? `${row.done}/${row.total}` : "—"}
-                      </span>
+                      <StatusPill status={t.status} />
+                      <span className="flex-1 text-sm truncate">{t.title}</span>
+                      <VisibilityBadge visibility={t.visibility} />
+                      <PriorityBadge priority={t.priority} />
                       <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100" />
                     </Link>
                   </li>
                 ))}
-                {totals.length === 0 && (
-                  <li className="text-xs text-muted-foreground px-2 py-3">Sin hitos definidos.</li>
+                {items.length === 0 && (
+                  <li className="text-xs text-muted-foreground px-2 py-3">Sin tareas visibles en esta fase.</li>
                 )}
               </ul>
             </Card>
