@@ -405,9 +405,18 @@ function TaskDetail() {
                   <Lock className="h-3.5 w-3.5" /> Tarea interna
                 </span>
                 <Switch
-                  checked={task.is_internal}
-                  onCheckedChange={(v) => void handlePatch({ is_internal: v })}
-                />
+  checked={task.visibility === "interna"}
+  onCheckedChange={(v) =>
+    void handlePatch({
+      visibility: v
+        ? "interna"
+        : task.type === "executive"
+          ? "visible_pm"
+          : "compartida",
+    })
+  }
+/>
+
               </label>
             )}
           </Card>
