@@ -165,11 +165,12 @@ function TaskDetail() {
             <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border border-border text-muted-foreground">
               {task.type === "technical" ? "Técnica" : "Ejecutiva"}
             </span>
-            {task.is_internal && (
-              <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border border-border text-muted-foreground flex items-center gap-1">
-                <Lock className="h-2.5 w-2.5" /> Interna
-              </span>
-            )}
+            {task.visibility === "interna" && (
+  <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border border-border text-muted-foreground flex items-center gap-1">
+    <Lock className="h-2.5 w-2.5" /> Interna
+  </span>
+)}
+
           </div>
           {isDev ? (
             <Input
