@@ -87,7 +87,7 @@ function AuthPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="albertodev@proyecto.com"
+                placeholder="user@proyecto.com"
                 required
               />
             </div>
@@ -110,10 +110,8 @@ function AuthPage() {
           <div className="mt-4 text-center text-sm text-muted-foreground">
             {mode === "signin" ? (
               <>
-                ¿Primera vez?{" "}
-                <button onClick={() => setMode("signup")} className="text-primary hover:underline">
-                  Crear cuenta
-                </button>
+                {" "}
+               
               </>
             ) : (
               <>
